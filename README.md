@@ -1,6 +1,6 @@
 # CPSC 490 (Project Title TBD)
 
-This is the repository containing code relevant to my undergraduate thesis, aka CPSC 490.
+This repository contains code relevant to my undergraduate thesis.
 
 ## Acknowledgements
 

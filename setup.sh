@@ -5,8 +5,8 @@
 # CPSC 490
 # One-time dev environment setup script.
 #
-
-# n.b. make sure you've installed Vagrant and VirtualBox before running
+# n.b. make sure Vagrant and VirtualBox are installed before running this script
+#
 
 vagrant plugin install vagrant-disksize vagrant-reload
 

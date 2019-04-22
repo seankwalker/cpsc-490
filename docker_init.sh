@@ -3,7 +3,7 @@
 #
 # Sean Walker
 # CPSC 490
-# Run the sandbox image for building and running NetBricks.
+# Enter a Docker container for building and running NetBricks.
 #
 
 IMAGE=seankwalker/cpsc-490-sandbox:latest
