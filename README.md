@@ -12,17 +12,17 @@ Because at the time of development the [original NetBricks source code](https://
 
 ### Building
 
-NetBricks requires a number of hardware prerequisites, which you can find linked in the README of the repository. Comcast's Occam team's fork has a variety of open source tools and code they use to streamline the development process (it also allows building and running the code on OSX).
+NetBricks requires a number of hardware and software prerequisites, which you can find linked in the README of the repository. Comcast's Occam team's fork has a variety of open source tools and code they use to streamline the development process (it also allows building and running the code on OSX).
 
 You can find more detailed instructions in the individual repos, but I'll outline the vital steps here.
 
 #### Dev Environment Setup
 
-We utilize Vagrant and VirtualBox to emulate an Ubuntu Linux environment to be used for development.
+We utilize Docker, Vagrant and VirtualBox to emulate an Ubuntu Linux environment to be used for development.
 
 A script which will do steps 2-5 automatically is available in `setup.sh`.
 
-1. Download and install [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
+1. Download and install [Docker](https://www.docker.com/get-started), [Vagrant](https://www.vagrantup.com/downloads.html) and [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
 
 2. Install two Vagrant plugins: `vagrant-disksize` and `vagrant-reload`, via `vagrant plugin install`.
 
