@@ -8,6 +8,8 @@ My thesis builds on top of [NetBricks](http://netbricks.io/), a framework for vi
 
 Because at the time of development the [original NetBricks source code](https://github.com/netsys/netbricks) was fraught with build errors and to speed up development, I used a fork of the original code which was developed by Comcast's Occam Engineering team, available [here](https://github.com/williamofockham/NetBricks).
 
+My fork, upon which the project is ultimately built, is available [here](https://github.com/seankwalker/NetBricks).
+
 ## Getting Started
 
 ### Building
