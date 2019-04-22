@@ -12,5 +12,5 @@ IMAGE=seankwalker/cpsc-490-sandbox:latest
 docker pull $IMAGE
 
 # run the sandbox with access to the NetBricks source
-docker run -it --rm --privileged --network=host -w /opt/NetBricks \
-        -v $(pwd):/opt/NetBricks $IMAGE /bin/bash
+docker run -it --rm --privileged --network=host -w /opt/cpsc-490 \
+        -v $(pwd):/opt/cpsc-490 $IMAGE /bin/bash
