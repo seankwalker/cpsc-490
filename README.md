@@ -6,7 +6,7 @@ This repository contains code relevant to my undergraduate thesis.
 
 My thesis builds on top of [NetBricks](http://netbricks.io/), a framework for virtual network function (VNF) development originally created by Aurojit Panda, Sangjin Han, Keon Jang, Melvin Walls, Sylvia Ratnasamy, and Scott Shenker.
 
-Because at the time of development the [original NetBricks source code](https://github.com/netsys/netbricks) was fraught with build errors, and also to speed up development with various tools, I used a fork of the original code by Comcast's Occam Engineering team, available [here](https://github.com/williamofockham/NetBricks).
+Because at the time of development the [original NetBricks source code](https://github.com/netsys/netbricks) was fraught with build errors and to speed up development, I used a fork of the original code which was developed by Comcast's Occam Engineering team, available [here](https://github.com/williamofockham/NetBricks).
 
 ## Getting Started
 
