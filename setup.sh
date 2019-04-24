@@ -11,7 +11,7 @@
 vagrant plugin install vagrant-disksize vagrant-reload
 
 git clone git@github.com:seankwalker/utils.git
-git clone git@github.com:seankwalker/NetBricks
+git clone git@github.com:seankwalker/NetBricks.git
 
 # if you prefer to use HTTPS, use the following lines instead of the above two:
 # git clone https://github.com/seankwalker/utils
