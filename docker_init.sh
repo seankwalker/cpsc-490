@@ -13,4 +13,7 @@ docker pull $IMAGE
 
 # run the sandbox with access to the NetBricks source
 docker run -it --rm --privileged --network=host -w /opt/cpsc-490 \
-        -v $(pwd):/opt/cpsc-490 $IMAGE /bin/bash
+        -v $(pwd):/opt/cpsc-490 \
+        -v /lib/modules:/lib/modules \
+        -v /usr/src:/usr/src \
+		-v /dev/hugepages:/dev/hugepages $IMAGE /bin/bash
