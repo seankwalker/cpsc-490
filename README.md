@@ -66,11 +66,12 @@ Once finished with the VM, it can be shut down via
 The VM can now be accessed by running `vagrant ssh`. `ssh` will enter in the
 same directory, but running in the Ubuntu VM.
 
-From there, run the `docker_init.sh` script to pull the latest container and
-enter it.
+From there, run the `docker_init.sh` script to pull the latest image from
+`seankwalker/dpdk` and start it in a container.
 
 The Docker container gives us an environment where NetBricks can be successfully
-built. From here, simply run `./build.sh build` to build NetBricks.
+built. The container should start in the `NetBricks` directory, so simply run
+`./build.sh build` to build NetBricks.
 
 ## Running Network Functions
 
@@ -102,10 +103,9 @@ For example, `maglev` can be run via
 I'd like to extend my thanks to the authors of NetBricks and the folks at
 Comcast's Occam Engineering team for creating the basis for my project.
 
-I'd also
-like to express my sincere gratitute to my thesis advisor, Professor Y. Richard
-Yang, for his consistent guidance, optimism, and insight throughout the process
-of creating this project.
+I'd also like to express my sincere gratitute to my thesis advisor, Professor
+Y. Richard Yang, for his consistent guidance, optimism, and insight throughout
+the process of creating this project.
 
 Lastly, thanks to Jacob Hillman, who has been a
 kind friend, supportive peer, and wonderful person to know throughout our

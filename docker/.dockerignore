@@ -1,0 +1,6 @@
+# ignore all files by default
+*
+
+# whitelist required files
+!common_linuxapp-17.08.container
+!defconfig_x86_64-nhm-linuxapp-gcc
