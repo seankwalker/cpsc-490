@@ -45,13 +45,9 @@ A script which automates steps 2-5 is available in `setup.sh`.
 2. Install two Vagrant plugins: `vagrant-disksize` and `vagrant-reload`, via
    `vagrant plugin install`.
 
-3. Clone the following repositories:
+3. Clone the following repository:
 
-   - `git@github.com:seankwalker/utils`
    - `git@github.com:seankwalker/NetBricks`
-
-4. Create a symlink to Vagrant's configuration file in the parent directory,
-   _i.e._ `ln -s utils/Vagrantfile`
 
 The dev VM can now be booted via
 
@@ -62,6 +58,8 @@ Once finished with the VM, it can be shut down via
 `vagrant halt`
 
 #### Using Vagrant and Docker
+
+Vagrant can be configured by editing `Vagrantfile`, if so desired.
 
 The VM can now be accessed by running `vagrant ssh`. `ssh` will enter in the
 same directory, but running in the Ubuntu VM.
