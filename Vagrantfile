@@ -9,11 +9,8 @@ VAGRANTFILE_API_VERSION = "2"
   end
 end
 
-$base_dir = File.dirname(__FILE__)
-# the directory where the provisioning scripts are located
-$scripts_dir = File.dirname(File.realdirpath(__FILE__))
-# the utils submodule directory relative to the base
-$submod_dir = Pathname.new($scripts_dir).relative_path_from(Pathname.new($base_dir))
+# vagrant scripts directory
+$scripts_dir = File.join(File.dirname(File.realdirpath(__FILE__)), "vagrant")
 
 $devbind_img = "seankwalker/dpdk-devbind:latest"
 $dpdk_driver = "uio_pci_generic"
@@ -51,7 +48,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "shell", path: "#{$scripts_dir}/vm-kernel-upgrade.sh"
   config.vm.provision "reload"
   config.vm.provision "shell", path: "#{$scripts_dir}/vm-setup.sh"
-  config.vm.provision "shell", path: "#{$scripts_dir}/containernet-setup.sh", args: ["#{$submod_dir}"]
 
   # Pull and run (then remove) our image in order to do the devbind
   config.vm.provision "docker" do |d|
