@@ -6,8 +6,7 @@
 # Enter a Docker container for building and running NetBricks.
 #
 
-# IMAGE=seankwalker/dpdk:latest
-IMAGE=seankwalker/dpdk
+IMAGE=seankwalker/cpsc-490-dev
 
 # ensure latest version of sandbox image
 docker pull $IMAGE

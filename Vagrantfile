@@ -14,7 +14,7 @@ $scripts_dir = File.join(File.dirname(File.realdirpath(__FILE__)), "vagrant")
 
 $devbind_img = "seankwalker/dpdk-devbind:latest"
 $dpdk_driver = "uio_pci_generic"
-$dpdk_devices = "0000:00:08.0 0000:00:09.0 0000:00:0a.0 0000:00:10.0"
+$dpdk_devices = "0000:00:08.0 0000:00:09.0"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # All Vagrant configuration is done here. The most common configuration
@@ -35,13 +35,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "private_network", ip: "10.1.2.1", mac: "BADCAFEBEEF1", nic_type: "virtio"
   # 0000:00:09.0 used for moongen
   config.vm.network "private_network", ip: "10.1.2.2", mac: "BADCAFEBEEF2", nic_type: "virtio"
-  # 0000:00:0a.0 used for containernet
-  config.vm.network "private_network", ip: "10.1.2.3", mac: "BADCAFEBEEF3", nic_type: "virtio"
-  # 0000:00:10.0 used for containernet
-  config.vm.network "private_network", ip: "10.1.2.4", mac: "BADCAFEBEEF4", nic_type: "virtio"
-  # used for ebpf testing
-  config.vm.network "private_network", ip: "fe80::b8dc:afff:feeb:eef5", mac: "BADCAFEBEEF5"
-  config.vm.network "private_network", ip: "fe80::b8dc:afff:feeb:eef6", mac: "BADCAFEBEEF6"
 
   # Setup the VM for DPDK, including binding the extra interface via the fetched
   # container

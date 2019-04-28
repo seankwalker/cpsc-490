@@ -1,10 +1,8 @@
-# dockerfile for `dpdk` image on docker hub
-# seankwalker/dpdk:latest
-
-# compile dpdk from source
+# Dockerfile for DPDK
+# seankwalker/dpdk
 FROM bitnami/minideb:stretch as builder
 
-ARG DPDK_VERSION
+ARG DPDK_VERSION=17.08.1
 ARG RTE_SDK=/tmp/dpdk-stable-${DPDK_VERSION}
 ARG CFLAGS="-g3 -Wno-error=maybe-uninitialized -fPIC"
 
@@ -27,10 +25,11 @@ RUN make config T=x86_64-nhm-linuxapp-gcc EXTRA_CFLAGS="${CFLAGS}" \
   && make -j$(nproc) EXTRA_CFLAGS="${CFLAGS}" \
   && make install
 
-# image with DPDK dev libs and utils
+# DPDK + development libraries and utilities
 FROM bitnami/minideb:stretch as dpdk
 
 RUN install_packages \
+  build-essential \
   iproute2 \
   libnuma-dev \
   libpcap-dev \
