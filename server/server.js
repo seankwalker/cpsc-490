@@ -4,8 +4,11 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
+// max number of clients per container
+const MAX_CLIENTS = 3;
+
 // id for NetBricks image
-const NB_IMAGE_ID = "eadf70e1ee5a";
+const NB_IMAGE = "seankwalker/cpsc-490-dev";
 
 // port to run server on
 const PORT = 3000;
@@ -61,97 +64,92 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
 
     // initialize a Docker container with a service chain respecting the
     // directed graph specified in the config file
-    // TODO
 
-    // check if we have any below-capacity containers which are running the
+    // check if there are any below-capacity containers which are running the
     // specified service chain
-    if (containers.has(parsed)) {
+    let d = new dockerode();
+    let candidates = containers.has(parsed) ? containers.get(parsed) : [];
+    if (candidates.length > 0) {
         console.log(
             "found existing candidate containers! checking capacity..."
         );
-        let candidates = containers.get(parsed);
-        for (let i = 0; i < candidates.length; i++) {
-            let candidate = candidates[i];
-            if (candidate.remainingCapacity > 0) {
-                // route to this container
-                console.log(`candidate container ${candidate} has space!`);
-                let d = new dockerode({
-                    host: candidate.host,
-                    port: candidate.port
-                });
+    }
 
-                // register this route in the routing table
-                routing.set({ clientIp, clientPort }, d);
-                return true;
-            }
+    for (let i = 0; i < candidates.length; i++) {
+        let candidate = candidates[i];
+        if (candidate.remainingCapacity > 0) {
+            // route to this container
+            console.log(`candidate container ${candidate} has space!`);
+
+            // register this route in the routing table
+            let container = candidate.container;
+            routing.set({ clientIp, clientPort }, container);
+
+            // update `containers` list
+            candidates.slice(candidates.indexOf(candidate));
+            containers.set(parsed, [
+                ...candidates,
+                {
+                    ...candidate,
+                    remainingCapacity: candidate.remainingCapacity - 1
+                }
+            ]);
+            return true;
         }
     }
 
-    console.log(
-        "no containers with remaining capacity found already running this service chain"
-    );
     // must spin up a new container
-    // TODO: where??
-    let d = new dockerode();
+    console.log(
+        "no containers with remaining capacity found already running this service chain; spinning up new container!"
+    );
 
-    console.log("creating new container");
-
-    // create new container
-    d.createContainer(
-        {
-            image: NB_IMAGE_ID,
-            HostConfig: {
-                Binds: [
-                    path.resolve(process.cwd(), "../") + ":/opt/cpsc-490",
-                    "/dev/hugepages:/dev/hugepages",
-                    "/lib/modules:/lib/modules",
-                    "/usr/src:/usr/src"
-                ],
-                NetworkMode: "host",
-                Privileged: true
-            },
-            WorkingDir: "/opt/cpsc-490/NetBricks",
-            Cmd: ["/bin/ls"],
-            Volumes: {
-                "/dev/hugepages": {},
-                "/lib/modules": {},
-                "/opt/cpsc-490": {},
-                "/usr/src": {}
+    const container = await d.createContainer({
+        Image: NB_IMAGE,
+        Tty: true,
+        ExposedPorts: { "80/tcp": {} },
+        HostConfig: {
+            Binds: [
+                path.resolve(process.cwd(), "../") + ":/opt/cpsc-490",
+                "/dev/hugepages:/dev/hugepages",
+                "/lib/modules:/lib/modules",
+                "/usr/src:/usr/src"
+            ],
+            NetworkMode: "host",
+            Privileged: true,
+            PortBindings: {
+                // container port 80 maps to host port `nextContainerPort`
+                "80/tcp": [
+                    {
+                        HostPort: nextContainerPort.toString()
+                    }
+                ]
             }
         },
-        (err, container) => {
-            if (err) {
-                console.log("error!", err);
-                return;
-            }
-
-            container.attach(
-                {
-                    stream: true,
-                    stdout: true,
-                    stderr: true,
-                    tty: true
-                },
-                (err, stream) => {
-                    if (err) {
-                        console.log("error!", err);
-                        return;
-                    }
-
-                    stream.pipe(process.stdout);
-
-                    container.start((err, data) => {
-                        if (err) {
-                            console.log("error!", err);
-                            return;
-                        }
-
-                        console.log(`data: ${data}`);
-                    });
-                }
-            );
+        WorkingDir: "/opt/cpsc-490/NetBricks",
+        Cmd: ["./build.sh", "build"], // TODO: run command of VNF chain here
+        Volumes: {
+            "/dev/hugepages": {},
+            "/lib/modules": {},
+            "/opt/cpsc-490": {},
+            "/usr/src": {}
         }
-    );
+    });
+
+    containers.set(parsed, [
+        ...candidates,
+        { container: container, remainingCapacity: MAX_CLIENTS - 1 }
+    ]);
+    nextContainerPort++;
+
+    // run the container
+    const stream = await container.attach({
+        stream: true,
+        stderr: true,
+        stdin: true,
+        stdout: true
+    });
+    stream.pipe(process.stdout);
+    await container.start();
 
     return true;
 };
@@ -165,16 +163,21 @@ app.use(express.json());
 
 // define API endpoint
 app.post("/start", upload.single("data"), async (req, res, next) => {
+    if (!req.file) {
+        res.sendStatus(400);
+        return;
+    }
+
     console.log("config file saved as:", req.file.filename);
-    console.log(req.connection.remoteAddress, req.connection.remotePort);
+
     const configFileContents = fs.readFileSync(req.file.path, "utf-8");
-    const status = await parseConfigFile(
+    const success = await parseConfigFile(
         req.connection.remoteAddress,
         req.connection.remotePort,
         configFileContents
     );
 
-    if (status) {
+    if (success) {
         res.sendStatus(200);
     } else {
         res.sendStatus(500);
