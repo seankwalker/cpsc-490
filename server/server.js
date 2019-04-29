@@ -128,7 +128,7 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
             }
         },
         WorkingDir: "/opt/cpsc-490/NetBricks",
-        Cmd: ["./build.sh", "build"], // TODO: run command of VNF chain here
+        Cmd: ["./build.sh", "run", "mme"], // TODO: run command of VNF chain here
         Volumes: {
             "/dev/hugepages": {},
             "/lib/modules": {},
