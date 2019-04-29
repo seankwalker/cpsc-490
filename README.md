@@ -86,7 +86,7 @@ the `build.sh` script knows what to check for. This allows selective building
 of only tests which are targeted in `examples.sh` without modifying the
 workspace members.
 
-Alternatively, one can run a specific NF via `cargo run --bin [name]`. The name
+Alternatively, one can run a specific NF via `./build.sh run <name>`. The name
 of the NF is specified in the `Cargo.toml` file contained within the
 subdirectory of `test` containing that network function. The name of the
 subdirectory should be the same as the package name specified in the NF's
@@ -94,7 +94,12 @@ subdirectory should be the same as the package name specified in the NF's
 
 For example, `maglev` can be run via
 
-`cargo run --bin maglev`
+`./build.sh run maglev`
+
+New NFs (i.e. those not in the original NetBricks release) have been written to
+take in sample packet data as a way of testing. Thus, they should be run with
+specific flags. In particular, each NF should have a `check.sh` script in its
+subdirectory, which should specify the options to run with.
 
 ## Acknowledgements
 

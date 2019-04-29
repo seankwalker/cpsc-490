@@ -1,0 +1,23 @@
+{
+    "name": "cpsc-490-server",
+    "version": "0.1.0",
+    "description": "Server for parsing configuration files into VNF service chains",
+    "main": "server.js",
+    "author": {
+        "name": "Sean Walker",
+        "email": "sean.walker@yale.edu"
+    },
+    "private": true,
+    "scripts": {
+        "start": "babel-node server.js"
+    },
+    "dependencies": {
+        "express": "^4.16.4",
+        "multer": "^1.4.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.4.4",
+        "@babel/node": "^7.2.2",
+        "@babel/preset-env": "^7.4.4"
+    }
+}
