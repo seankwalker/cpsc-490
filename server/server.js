@@ -103,6 +103,7 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
         "no containers with remaining capacity found already running this service chain; spinning up new container!"
     );
 
+    const hostPort = nextContainerPort.toString();
     const container = await d.createContainer({
         Image: NB_IMAGE,
         Tty: true,
@@ -120,7 +121,8 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
                 // container port 80 maps to host port `nextContainerPort`
                 "80/tcp": [
                     {
-                        HostPort: nextContainerPort.toString()
+                        HostIp: "",
+                        HostPort: hostPort
                     }
                 ]
             }
