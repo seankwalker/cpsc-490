@@ -26,6 +26,8 @@ const storage = multer.diskStorage({
     }
 });
 
+/* ROUTING SETUP */
+
 // initialize app, file upload middleware
 const app = express();
 const upload = multer({ fileFilter: jsonFileFilter, storage: storage });
