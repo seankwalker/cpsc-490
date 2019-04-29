@@ -26,19 +26,38 @@ used for this project. In particular, `docker/dev` builds the
 [full DPDK image](https://cloud.docker.com/repository/docker/seankwalker/dpdk),
 which contains more DPDK testing and debugging tools.
 
-`server/` contains code related to the server which should be running on a
-routing/load-balancing middlebox which communicates with the orchestrator. In
-particular, this server's job is to receive configuration files from the
-orchestrator. Each config file, written in the JSON format, is parsed as a
-directed graph defining a VNF service chain. The server then either routes the
-traffic specified by the server to an already-existing container on some other
-middlebox which is running the specified service chain (and has enough capacity
-to serve another UE) or spins up a new container with the service chain and
-routes the traffic there.
+`server/` contains code related to the server (written in Express) which should
+be running on a routing/load-balancing middlebox which communicates with the
+orchestrator. In particular, this server's job is to receive configuration files
+from the orchestrator. Each config file, written in the JSON format, is parsed
+as a directed graph defining a VNF service chain. The server then either routes
+the traffic specified by the server to an already-existing container on some
+other middlebox which is running the specified service chain (and has enough
+capacity to serve another client) or spins up a new container with the service
+chain and routes the traffic there.
 
 `vagrant/` contains configuration files and scripts used by Vagrant.
 
 ## Getting Started
+
+### Overview
+
+The code in this repo is structured such that it can be used for both
+development and running in "production."
+
+For "production," the goal is that a VNF service chain is dynamically created by
+the server. The server then will spin up a Docker container which runs that
+service chain.
+
+As one might imagine, it's much easier to test and run code during development
+in an environment which doesn't need to be dynamically spin up constantly. To
+this end, one can instead simply run the same Docker image the server uses for
+its service chains from the command line and run the code one wishes inside that
+container.
+
+The following sections outline the process from a broader perspective. Notes are
+provided in each section on how development and production modes accomplish the
+task.
 
 ### Building
 
@@ -51,22 +70,28 @@ More detailed instructions can be found in the individual repos, but the vital
 steps are outlined here (following them will be sufficient to get up and
 running).
 
-#### Dev Environment Setup
+#### Environment Setup
 
 Docker, Vagrant and VirtualBox are used to emulate an Ubuntu Linux environment
 with the necessary devices, libraries, and software to be used for building and
 developing NetBricks.
 
-A script which automates steps 2-5 is available in `setup.sh`.
+A script which automates steps 2-4 is available in `setup.sh`.
 
 1. Download and install [Docker](https://www.docker.com/get-started),
    [Vagrant](https://www.vagrantup.com/downloads.html) and
    [VirtualBox](https://www.virtualbox.org/wiki/Downloads).
 
-2. Install two Vagrant plugins: `vagrant-disksize` and `vagrant-reload`, via
+2. Set the environment variable `VAGRANT_CWD` to `vagrant`, _i.e._
+
+   ```shell
+   export VAGRANT_CWD=vagrant
+   ```
+
+3. Install two Vagrant plugins: `vagrant-disksize` and `vagrant-reload`, via
    `vagrant plugin install`.
 
-3. Clone the following repository:
+4. Clone the following repository:
 
    - `git@github.com:seankwalker/NetBricks`
 
@@ -80,19 +105,29 @@ Once finished with the VM, it can be shut down via
 
 #### Using Vagrant and Docker
 
-Vagrant can be configured by editing `Vagrantfile`, if so desired.
+Vagrant can be configured by editing `Vagrantfile` (in the `vagrant` directory),
+if so desired.
 
-The VM can now be accessed by running `vagrant ssh`. `ssh` will enter in the
-same directory, but running in the Ubuntu VM.
+The VM can now be accessed by running `vagrant ssh`. `ssh` will enter in this
+repo's root directory, but running in the Ubuntu VM.
 
-From there, run the `docker_init.sh` script to pull the latest image from
-`seankwalker/dpdk` and start it in a container.
+##### Development
 
-The Docker container gives us an environment where NetBricks can be successfully
+Running the `docker_init.sh` script with a singular command line argument,
+`run`, will pull the latest `seankwalker/dpdk` image from Docker Hub and then
+run a container from that image.
+
+The Docker container provides an environment where NetBricks can be successfully
 built. The container should start in the `NetBricks` directory, so simply run
 `./build.sh build` to build NetBricks.
 
-## Running Network Functions
+##### Production
+
+Since the server will be dynamically spinning up all containers based on the
+`seankwalker/dpdk` image from Docker Hub, simply run `docker_init.sh` with no
+arguments. This will pull the image, but not start a container.
+
+## Running Network Functions (Development)
 
 Once NetBricks is built, any files using it as a dependency can now be run.
 Following the convention from the original repository, network functions (NFs)
@@ -121,6 +156,37 @@ New NFs (i.e. those not in the original NetBricks release) have been written to
 take in sample packet data as a way of testing. Thus, they should be run with
 specific flags. In particular, each NF should have a `check.sh` script in its
 subdirectory, which should specify the options to run with.
+
+## Running the Server (Production)
+
+To run the server, in the Vagrant Ubuntu VM, move into the `server` directory
+and start the server, _e.g._
+
+```shell
+cd server; npm i; npm start
+```
+
+The server should now be accessible. By default, it runs on port 3000.
+
+### Server API
+
+The server dynamically spins up VNF service chain containers based on
+configuration files passed to its single endpoint, `/start`.
+
+#### Configuration File Format
+
+Configuration files should be written in JSON. Each file represents a directed
+graph, which in turn is parsed into a service chain by the server. For instance,
+for a service chain of Firewall -> Deep Packet Inspection -> Network Address
+Translation, the configuration file would be as follows:
+
+```json
+[{ "name": "firewall" }, { "name": "dpi" }, { "name": "nat" }]
+```
+
+##### Supported VNFs
+
+**TODO**
 
 ## Acknowledgements
 
