@@ -132,7 +132,7 @@ arguments. This will pull the image, but not start a container.
 Once NetBricks is built, any files using it as a dependency can now be run.
 Following the convention from the original repository, network functions (NFs)
 live in the `test` directory. There are several ways to run any NF,
-but the most direct and simple way is via `cargo`, Rust's package manager.
+but a special script, `build.sh`, has been written to ease the process.
 
 `build.sh` targets all submodules in the `test` directory. Each of these
 submodules should have a `Cargo.toml` and should additionally be listed as a
@@ -150,9 +150,11 @@ subdirectory should be the same as the package name specified in the NF's
 
 For example, `maglev` can be run via
 
-`./build.sh run maglev`
+```shell
+./build.sh run maglev
+```
 
-New NFs (i.e. those not in the original NetBricks release) have been written to
+New NFs (_i.e._ those not in the original NetBricks release) have been written to
 take in sample packet data as a way of testing. Thus, they should be run with
 specific flags. In particular, each NF should have a `check.sh` script in its
 subdirectory, which should specify the options to run with.
@@ -183,6 +185,11 @@ Translation, the configuration file would be as follows:
 ```json
 [{ "name": "firewall" }, { "name": "dpi" }, { "name": "nat" }]
 ```
+
+That is, the file should be an array of objects, where each object represents a
+VNF and the order of the objects in the array represents the order of the
+service chain, _i.e._ the first object will take input from clients and output
+to the second object, which outputs to the third, and so on.
 
 ##### Supported VNFs
 
