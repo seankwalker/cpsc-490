@@ -12,6 +12,7 @@
         "start": "babel-node server.js"
     },
     "dependencies": {
+        "dockerode": "^2.5.8",
         "express": "^4.16.4",
         "multer": "^1.4.1"
     },
