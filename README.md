@@ -17,6 +17,27 @@ original code which was developed by Comcast's Occam Engineering team, available
 My fork, upon which the project is ultimately built, is available
 [here](https://github.com/seankwalker/NetBricks).
 
+### Project Structure
+
+`docker/` contains subdirectories which have Dockerfiles for building the images
+used for this project. In particular, `docker/dev` builds the
+[dev image](https://cloud.docker.com/repository/docker/seankwalker/cpsc-490-dev)
+, which is used for running the project, and `docker/dpdk` builds the
+[full DPDK image](https://cloud.docker.com/repository/docker/seankwalker/dpdk),
+which contains more DPDK testing and debugging tools.
+
+`server/` contains code related to the server which should be running on a
+routing/load-balancing middlebox which communicates with the orchestrator. In
+particular, this server's job is to receive configuration files from the
+orchestrator. Each config file, written in the JSON format, is parsed as a
+directed graph defining a VNF service chain. The server then either routes the
+traffic specified by the server to an already-existing container on some other
+middlebox which is running the specified service chain (and has enough capacity
+to serve another UE) or spins up a new container with the service chain and
+routes the traffic there.
+
+`vagrant/` contains configuration files and scripts used by Vagrant.
+
 ## Getting Started
 
 ### Building
