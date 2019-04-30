@@ -168,19 +168,24 @@ and start the server, _e.g._
 cd server; npm i; npm start
 ```
 
-The server should now be accessible. By default, it runs on port 3000.
+(You only need to run `npm i` once, to install requisite packages. Thereafter,
+one can stop the server via `SIGINT` or otherwise as usual and restart via
+`npm start`).
+
+The server is now accessible. By default, it runs on port 3000; this can be
+changed in `server/server.js` if you wish.
 
 ### Server API
 
-The server dynamically spins up VNF service chain containers based on
-configuration files passed to its single endpoint, `/start`.
+The server dynamically spins up containers which run VNF service chains
+described by configuration files passed to its single API endpoint, `/start`.
 
 #### Configuration File Format
 
-Configuration files should be written in JSON. Each file represents a directed
-graph, which in turn is parsed into a service chain by the server. For instance,
-for a service chain of Firewall -> Deep Packet Inspection -> Network Address
-Translation, the configuration file would be as follows:
+Configuration files should be written in JSON format. Each file represents a
+directed graph, which in turn is parsed into a service chain by the server. For
+instance, for a service chain of Firewall -> Deep Packet Inspection -> Network
+Address Translation, the configuration file would be as follows:
 
 ```json
 [{ "name": "firewall" }, { "name": "dpi" }, { "name": "nat" }]
@@ -191,9 +196,41 @@ VNF and the order of the objects in the array represents the order of the
 service chain, _i.e._ the first object will take input from clients and output
 to the second object, which outputs to the third, and so on.
 
-##### Supported VNFs
+#### Supported NFs
 
 **TODO**
+
+#### Writing New NFs
+
+To write a new NF supported by the server, make sure it abides by the following
+requirements:
+
+- The NF should live, as other NFs do, in `NetBricks/test/<NF name>`. More
+  specifically, the directory structure should be as follows:
+
+```shell
+NetBricks/
+|
+...
+|-- test/<NF name>
+|   |-- Cargo.toml
+|   |-- src/
+|   |   `-- nf.rs
+|   ...
+|
+...
+```
+
+- The above output is the minimal required, and the names should be exactly as
+  listed. Additionally, the name of the actual NF in the Rust source file
+  (`nf.rs`) should be the same as the subdirectory name in `test/` (_i.e._
+  `<NF name>`).
+
+- Even if the NF is not run outside of its service chain, ensure that it has
+  a `Cargo.toml`, because external dependencies and authorship information are
+  pulled from it when the server creates the `Cargo.toml` of the whole service
+  chain.
+  - **TODO** (the above described functionality is not-yet-implemented)
 
 ## Acknowledgements
 
