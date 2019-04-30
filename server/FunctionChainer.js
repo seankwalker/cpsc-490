@@ -1,12 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {
-    AUTHOR,
-    TOP_BOILERPLATE,
-    MAIN_START,
-    MAIN_END,
-    CARGO_BOILERPLATE
-} from "./boilerplate";
+import { AUTHOR, TOP_BOILERPLATE, MAIN_START, MAIN_END } from "./boilerplate";
 
 const supportedNetworkFunctions = { mme: true, nat: true };
 
@@ -117,7 +111,14 @@ const functionChainer = graph => {
 
     // TODO: what if the NF requires more dependencies?
     // -> should be able to pull them from each NF's Cargo.toml deps...
-    const cargoContents = CARGO_BOILERPLATE;
+    const cargoContents = `[package]
+    name = "${serviceChainName}"
+    version = "0.1.0"
+    authors = ["${AUTHOR_STRING}"]
+
+    [dependencies]
+    netbricks = { path = "../../framework", features = ["performance"] }`;
+
     const cargoPath = path.join(
         "..",
         "NetBricks",

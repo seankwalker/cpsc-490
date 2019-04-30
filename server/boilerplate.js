@@ -60,12 +60,4 @@ Err(e) => {
 }
 }`;
 
-const CARGO_BOILERPLATE = `[package]
-name = "${serviceChainName}"
-version = "0.1.0"
-authors = ["${AUTHOR_STRING}"]
-
-[dependencies]
-netbricks = { path = "../../framework", features = ["performance"] }`;
-
-export { AUTHOR, TOP_BOILERPLATE, MAIN_START, MAIN_END, CARGO_BOILERPLATE };
+export { AUTHOR, TOP_BOILERPLATE, MAIN_START, MAIN_END };
