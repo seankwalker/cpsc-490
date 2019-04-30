@@ -4,6 +4,8 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
+import functionChainer from "./FunctionChainer";
+
 // max number of clients per container
 const MAX_CLIENTS = 3;
 
@@ -103,6 +105,15 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
         "no containers with remaining capacity found already running this service chain; spinning up new container!"
     );
 
+    // create an executable to send into the container which runs the specified
+    // service chain
+    const serviceChain = functionChainer(parsed);
+    if (!serviceChain) {
+        // unsupported function was specified
+        console.log("error: unsupported function was requested");
+        return false;
+    }
+
     const hostPort = nextContainerPort.toString();
     const container = await d.createContainer({
         Image: NB_IMAGE,
@@ -128,7 +139,7 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
             }
         },
         WorkingDir: "/opt/cpsc-490/NetBricks",
-        Cmd: ["./build.sh", "run", "mme"], // TODO: run command of VNF chain here
+        Cmd: ["cpsc-490/build.sh", serviceChain], // TODO: run command of VNF chain here
         Volumes: {
             "/dev/hugepages": {},
             "/lib/modules": {},
