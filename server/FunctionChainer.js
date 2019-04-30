@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AUTHOR, TOP_BOILERPLATE, MAIN_START, MAIN_END } from "./boilerplate";
+import { TOP_BOILERPLATE, MAIN_START, MAIN_END } from "./boilerplate";
 
 const supportedNetworkFunctions = { mme: true, nat: true };
 
@@ -29,6 +29,8 @@ const functionChainer = graph => {
     // if not, build it
     let mainFunctionBoilerplate = TOP_BOILERPLATE;
     let mainFunctionContents = MAIN_START;
+    let cargoAuthors = new Set();
+    let cargoDeps = new Set();
 
     for (let i = 0; i < graph.length; i++) {
         // each node in the graph is the next function in the service chain
@@ -89,6 +91,42 @@ const functionChainer = graph => {
         mainFunctionBoilerplate += `use ${nf.name}::${nf.name};\nmod ${
             nf.name
         };\n`;
+
+        // retrieve dependencies and authorship info from source NF Cargo.toml
+        const srcCargoPath = path.join(
+            "..",
+            "NetBricks",
+            "test",
+            nf.name,
+            "Cargo.toml"
+        );
+        const srcCargoContents = fs.readFileSync(srcCargoPath, "utf-8");
+        let cargoLines = srcCargoContents.split("\n");
+        let parsingDeps = false;
+        for (let i = 0; i < cargoLines.length; i++) {
+            const trimmed = cargoLines[i].trim();
+            const leftSide = trimmed.split(" ", 1)[0];
+            const rightSide = trimmed
+                .split(" ")
+                .slice(2)
+                .join(" ");
+
+            if (parsingDeps) {
+                // dependency-name = dependency
+                cargoDeps.add([leftSide, rightSide]);
+            } else {
+                if (leftSide !== "authors") {
+                    if (leftSide === "[dependencies]") {
+                        parsingDeps = true;
+                    }
+                    continue;
+                }
+
+                // authors = ["First Last <email>, First2 Last2 <email2> {...}"]
+                // chop of the brackets and quotes on either side
+                cargoAuthors.add(rightSide.slice(2, -2));
+            }
+        }
     }
 
     // all members of service chain are ready
@@ -111,13 +149,20 @@ const functionChainer = graph => {
 
     // TODO: what if the NF requires more dependencies?
     // -> should be able to pull them from each NF's Cargo.toml deps...
-    const cargoContents = `[package]
-    name = "${serviceChainName}"
-    version = "0.1.0"
-    authors = ["${AUTHOR_STRING}"]
+    const authors = Array.from(cargoAuthors).join(" ");
+    let cargoContents = `
+[package]
+name = "${serviceChainName}"
+version = "0.1.0"
+authors = ["${authors}"]
 
-    [dependencies]
-    netbricks = { path = "../../framework", features = ["performance"] }`;
+[dependencies]
+`;
+
+    const deps = Array.from(cargoDeps);
+    for (let i = 0; i < deps.length; i++) {
+        cargoContents += deps[i].join(" = ") + "\n";
+    }
 
     const cargoPath = path.join(
         "..",

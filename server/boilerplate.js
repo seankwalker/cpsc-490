@@ -1,6 +1,3 @@
-// written to `Cargo.toml` for the service chain
-const AUTHOR = "Sean Walker <sean.walker@yale.edu>";
-
 // standard imports for all service chains
 const TOP_BOILERPLATE = `#![feature(box_syntax)]
 extern crate netbricks;
@@ -60,4 +57,4 @@ Err(e) => {
 }
 }`;
 
-export { AUTHOR, TOP_BOILERPLATE, MAIN_START, MAIN_END };
+export { TOP_BOILERPLATE, MAIN_START, MAIN_END };
