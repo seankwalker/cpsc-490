@@ -168,9 +168,9 @@ and start the server, _e.g._
 cd server; npm i; npm start
 ```
 
-(You only need to run `npm i` once, to install requisite packages. Thereafter,
-one can stop the server via `SIGINT` or otherwise as usual and restart via
-`npm start`).
+(One need only run `npm i` once, to install requisite packages. Thereafter,
+the server can be stopped via `SIGINT` or otherwise as usual and restart via
+`npm start`.)
 
 The server is now accessible. By default, it runs on port 3000; this can be
 changed in `server/server.js` if you wish.
@@ -230,7 +230,6 @@ NetBricks/
   a `Cargo.toml`, because external dependencies and authorship information are
   pulled from it when the server creates the `Cargo.toml` of the whole service
   chain.
-  - **TODO** (the above described functionality is not-yet-implemented)
 
 ## Acknowledgements
 
