@@ -198,7 +198,24 @@ to the second object, which outputs to the third, and so on.
 
 #### Supported NFs
 
-**TODO**
+The server supports NFs which have the following function signature:
+
+```rust
+pub fn nf_name<T>(parent: T) -> CompositionBatch
+where
+    T: Batch<Header = NullHeader> + 'static
+{
+    ...
+}
+```
+
+(In other words, each NF should take a singular packet batch argument.)
+
+**TODO** in the future, it will support functions which have additional
+arguments.
+
+Note: at time of writing, no new NFs have been added to those available in the
+NetBricks repository.
 
 #### Writing New NFs
 
