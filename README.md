@@ -251,7 +251,57 @@ provided in the `dev` Docker container. To use it,
       script; one could alternatively directly run the binary) before starting
       `testpmd`.
 
-3.  After running the above, traffic should run from the generator to the NF
+      This will start `testpmd` in interactive mode. Initially, it should output
+      a message like this:
+
+      ```
+      EAL: Detected 4 lcore(s)
+      EAL: Probing VFIO support...
+      EAL: PCI device 0000:00:03.0 on NUMA socket -1
+      EAL:   Invalid NUMA socket, default to 0
+      EAL:   probe driver: 8086:100e net_e1000_em
+      EAL: PCI device 0000:00:08.0 on NUMA socket -1
+      EAL:   Invalid NUMA socket, default to 0
+      EAL:   probe driver: 1af4:1000 net_virtio
+      EAL: PCI device 0000:00:09.0 on NUMA socket -1
+      EAL:   Invalid NUMA socket, default to 0
+      EAL:   probe driver: 1af4:1000 net_virtio
+      PMD: Initializing pmd_pcap for eth_pcap0
+      PMD: Creating pcap-backed ethdev on numa socket 4294967295
+      Interactive-mode selected
+      Warning: NUMA should be configured manually by using --port-numa-config and --ring-numa-config parameters along with --numa.
+      USER1: create a new mbuf pool <mbuf_pool_socket_0>: n=171456, size=2176, socket=0
+      Configuring Port 0 (socket 0)
+      Port 0: BA:DC:AF:EB:EE:F1
+      Configuring Port 1 (socket 0)
+      Port 1: BA:DC:AF:EB:EE:F2
+      Configuring Port 2 (socket 0)
+      Port 2: 00:00:00:01:02:03
+      Checking link statuses...
+      Done
+      ```
+
+      as well as a prompt for input. At the prompt, run
+
+      ```
+      start tx_first
+      ```
+
+      to begin packet transmission. When finished, run
+
+      ```
+      stop
+      ```
+
+      and then when finished with `testpmd`, run
+
+      ```
+      quit
+      ```
+
+      to exit the application.
+
+3)  After running the above, traffic should run from the generator to the NF
     running on the other network device. This traffic can then be logged,
     benchmarked, etc.
 
