@@ -1,3 +1,5 @@
 .vagrant
 NetBricks
 ubuntu*
+netperf
+openvswitch*

@@ -21,4 +21,12 @@ if [ "$1" = "run" ]; then
         -v /lib/modules:/lib/modules \
         -v /usr/src:/usr/src \
         -v /dev/hugepages:/dev/hugepages $IMAGE /bin/bash
+elif [ "$1" = "benchmark" ]; then
+    echo "running container for benchmarking..."
+    docker run -it --rm --privileged --network=host -w /opt/cpsc-490/NetBricks \
+        -v $(pwd):/opt/cpsc-490 \
+        -v /lib/modules:/lib/modules \
+        -v /usr/src:/usr/src \
+        -v /usr/local/bin/netperf:/usr/local/bin/netperf \
+        -v /dev/hugepages:/dev/hugepages $IMAGE /bin/bash
 fi
