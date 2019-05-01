@@ -39,7 +39,8 @@ Ok(m) => m,
 Err(e) => panic!(e.to_string()),
 };
 // build netbricks configuration and context
-let configuration = read_matches(&matches, &opts);
+let mut configuration = read_matches(&matches, &opts);
+configuration.pool_size = 512;  // limit memory size
 
 match initialize_system(&configuration) {
 Ok(mut context) => {

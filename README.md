@@ -154,10 +154,100 @@ For example, `maglev` can be run via
 ./build.sh run maglev
 ```
 
-New NFs (_i.e._ those not in the original NetBricks release) have been written to
-take in sample packet data as a way of testing. Thus, they should be run with
+### Testing with `.pcap` Files
+
+New NFs (_i.e._ those not in the original NetBricks release) have been written
+to take in sample packet data as a way of testing. Thus, they should be run with
 specific flags. In particular, each NF should have a `check.sh` script in its
 subdirectory, which should specify the options to run with.
+
+### Testing with a Traffic Generator
+
+If you want to test traffic from a traffic generator, it suffices to leverage
+[`testpmd`](https://dpdk.readthedocs.io/en/v17.08/testpmd_app_ug/), provided in
+the dev Docker container. To use it,
+
+1.  Ensure that the two network devices on the image are bound to
+    DPDK-compatible drivers:
+
+    - In the container, run
+      `shell dpdk-devbind --status`
+      If the output shows two devices listed under devices using a
+      DPDK-compatible driver, they are successfully bound; it should look
+      something like this:
+
+      ```
+      Network devices using DPDK-compatible driver
+      ============================================
+      0000:00:08.0 'Virtio network device 1000' drv=uio_pci_generic unused=
+      0000:00:09.0 'Virtio network device 1000' drv=uio_pci_generic unused=
+      ```
+
+      Otherwise, the devices need to be bound to the DPDK-compatible driver. If
+      this is the case, `dpdk-devbind` should have outputted something like
+      this:
+
+      ```
+      Network devices using kernel driver
+      ===================================
+      0000:00:08.0 'Virtio network device 1000' if=enp0s8 unused=uio_pci_generic
+      0000:00:09.0 'Virtio network device 1000' if=enp0s9 unused=uio_pci_generic
+      ```
+
+      The `unused` note indicates that the `uio_pci_generic` (a DPDK-compatible
+      driver) can be used on this device but is currently not being used. To
+      bind, run the following in the shell:
+
+      ```shell
+      dpdk-devbind --force -b 0000:00:08.0 uio_pci_generic && \
+      dpdk-devbind --force -b 0000:00:09.0 uio_pci_generic
+      ```
+
+      (The network device addresses above should be the same on all VMs, as they
+      are specified in the `Vagrantfile`. If for whatever reason different
+      device addresses are found, of course those should be replaced here.)
+
+2.  Once the devices are bound to DPDK-compatible drivers, data can now be sent
+    to them using DPDK tools. One could use `pktgen` here, but for sake of
+    simplicity, instructions will be provided only for using `testpmd.`
+
+    - First, run the desired network function chain. If it was, say, the
+      Firewall -> DPI -> NAT example referenced (below, in the Server section),
+      one might run something like:
+
+      ```shell
+      cpsc-490/build.sh firewall-dpi-nat -c 1 -p dpdk:eth_pcap0,iface=enp0s3 > test.out 2>&1 &
+      ```
+
+      That is, the `firewall-dpi-nat` executable is run (in the background) with
+      one core (`-c 1`) and using DPDK for its data port setup, set to the
+      `enp0s3` interface. Output is redirected to `test.out` for logging.
+
+      In the above example, `en0ps3` is used as it is the name of the actual
+      network device of the VM. This can be found by running `dpdk-devbind` and
+      looking under "Network devices using kernel driver," or by running
+
+      ```shell
+      ip link show
+      ```
+
+      and locating the only non-Docker non-loopback device.
+
+    - Next, run `testpmd` to send traffic from one virtual device (generator) to
+      the other (the NetBricks NF) over the specified interface, _e.g._
+
+      ```shell
+      testpmd --vdev "eth_pcap0,iface=enp0s3" -- --interactive --port-topology=chained
+      ```
+
+      Note that in the above example, one should wait a bit for the NF to start
+      (as it may take some time for `Cargo` to re-build, if one uses the build
+      script; one could alternatively directly run the binary) before starting
+      `testpmd`.
+
+3.  After running the above, traffic should run from the generator to the NF
+    running on the other network device. This traffic can then be logged,
+    benchmarked, etc.
 
 ## Running the Server (Production)
 
