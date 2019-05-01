@@ -164,8 +164,8 @@ subdirectory, which should specify the options to run with.
 ### Testing with a Traffic Generator
 
 If you want to test traffic from a traffic generator, it suffices to leverage
-[`testpmd`](https://dpdk.readthedocs.io/en/v17.08/testpmd_app_ug/), provided in
-the dev Docker container. To use it,
+[`testpmd`](https://dpdk.readthedocs.io/en/v17.08/testpmd_app_ug/), which is
+provided in the `dev` Docker container. To use it,
 
 1.  Ensure that the two network devices on the image are bound to
     DPDK-compatible drivers:
@@ -211,7 +211,7 @@ the dev Docker container. To use it,
     to them using DPDK tools. One could use `pktgen` here, but for sake of
     simplicity, instructions will be provided only for using `testpmd.`
 
-    - First, run the desired network function chain. If it was, say, the
+    - First, run the desired NF chain (or individual NF). If it was, say, the
       Firewall -> DPI -> NAT example referenced (below, in the Server section),
       one might run something like:
 
@@ -219,9 +219,15 @@ the dev Docker container. To use it,
       cpsc-490/build.sh firewall-dpi-nat -c 1 -p dpdk:eth_pcap0,iface=enp0s3 > test.out 2>&1 &
       ```
 
-      That is, the `firewall-dpi-nat` executable is run (in the background) with
-      one core (`-c 1`) and using DPDK for its data port setup, set to the
-      `enp0s3` interface. Output is redirected to `test.out` for logging.
+      (Note that for running individual NFs, one would be running the binaries
+      directly or using the root-level `build.sh`, rather than the one in the
+      `NetBricks/cpsc-490` subdirectory, which is meant to be used on NF service
+      chains rather than individual NFs.)
+
+      In other words, the `firewall-dpi-nat` executable is run (in the
+      background) with one core (`-c 1`) and using DPDK for its data port setup,
+      set to the `enp0s3` interface. Output is redirected to `test.out` for
+      logging.
 
       In the above example, `en0ps3` is used as it is the name of the actual
       network device of the VM. This can be found by running `dpdk-devbind` and
