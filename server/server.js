@@ -75,7 +75,7 @@ const getMACAddress = async container => {
 };
 
 // parse config file into JS object
-const parseConfigFile = async (clientIp, clientPort, contents) => {
+const parseConfigFile = async contents => {
     const parsed = JSON.parse(contents);
     console.log("parsed JSON object:", parsed);
 
@@ -99,7 +99,7 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
 
         // update container capacity
         const container = candidate.container;
-        candidates.slice(candidates.indexOf(candidate));
+        candidates = candidates.slice(candidates.indexOf(candidate) + 1);
         containers.set(parsed, [
             ...candidates,
             {
@@ -179,20 +179,45 @@ const upload = multer({ fileFilter: jsonFileFilter, storage: storage });
 app.use(express.json());
 
 // define API endpoints
+
+// returns capacity of all slices for a given config
+app.post("/capacity", upload.single("data"), async (req, res, next) => {
+    if (!req.file) {
+        res.sendStatus(400);
+        return;
+    }
+
+    const configFileContents = fs.readFileSync(req.file.path, "utf-8");
+    const parsed = JSON.parse(configFileContents);
+
+    const containersForConfig = containers.get(parsed) || [];
+
+    res.status(200).send(
+        containersForConfig.map(
+            containerInfo => containerInfo.remainingCapacity
+        )
+    );
+
+    // delete uploaded config file
+    fs.unlinkSync(req.file.path);
+});
+
+// tells whether the server supports NF specified by query parameter `nf`
+app.get("/does-support", (req, res, next) => {
+    const queriedNF = req.query.nf;
+    const isSupported = supportedNetworkFunctions[queriedNF];
+    res.status(200).send(isSupported);
+});
+
+// creates a new slice for the specified config
 app.post("/start", upload.single("data"), async (req, res, next) => {
     if (!req.file) {
         res.sendStatus(400);
         return;
     }
-    console.log("config file saved as:", req.file.filename);
 
     const configFileContents = fs.readFileSync(req.file.path, "utf-8");
-    const parseResult = await parseConfigFile(
-        req.connection.remoteAddress,
-        req.connection.remotePort,
-        configFileContents
-    );
-
+    const parseResult = await parseConfigFile(configFileContents);
     if (parseResult) {
         // send MAC address back to orchestrator
         // the orchestrator should use this mac address in packets it sends for
@@ -202,13 +227,9 @@ app.post("/start", upload.single("data"), async (req, res, next) => {
     } else {
         res.sendStatus(500);
     }
-});
 
-// tells whether the server supports NF specified by query parameter `nf`
-app.get("/does-support", (req, res, next) => {
-    const queriedNF = req.query.nf;
-    const isSupported = supportedNetworkFunctions[queriedNF];
-    res.status(200).send(isSupported);
+    // delete uploaded file
+    fs.unlinkSync(req.file.path);
 });
 
 // lists all supported NFs
