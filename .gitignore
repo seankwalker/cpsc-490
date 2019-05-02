@@ -1,5 +1,6 @@
 .vagrant
+dpdk*
 NetBricks
 ubuntu*
-netperf
 openvswitch*
+pktgen*

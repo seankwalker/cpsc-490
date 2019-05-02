@@ -190,8 +190,9 @@ provided in the `dev` Docker container. To use it,
       ```
       Network devices using kernel driver
       ===================================
-      0000:00:08.0 'Virtio network device 1000' if=enp0s8 unused=uio_pci_generic
-      0000:00:09.0 'Virtio network device 1000' if=enp0s9 unused=uio_pci_generic
+      0000:00:03.0 '82540EM Gigabit Ethernet Controller' if=enp0s3 drv=e1000 unused=igb_uio,uio_pci_generic *Active*
+      0000:00:08.0 'Virtio network device' if=enp0s8 drv=virtio-pci unused=uio_pci_generic *Active*
+      0000:00:09.0 'Virtio network device' if=enp0s9 drv=virtio-pci unused=uio_pci_generic *Active*
       ```
 
       The `unused` note indicates that the `uio_pci_generic` (a DPDK-compatible
@@ -393,6 +394,85 @@ NetBricks/
   a `Cargo.toml`, because external dependencies and authorship information are
   pulled from it when the server creates the `Cargo.toml` of the whole service
   chain.
+
+## Benchmarking
+
+Open vSwitch, Pktgen, and DPDK are used to benchmark performance. For
+compatability, the most recent versions of the libraries cannot be used (see
+[this link](https://mail.openvswitch.org/pipermail/ovs-discuss/2017-August/045173.html)).
+As such, in the report, results are based on the following versions:
+
+- [Open vSwitch v2.7.2](https://www.openvswitch.org/releases/openvswitch-2.7.6.tar.gz)
+- [DPDK v16.11.9](http://fast.dpdk.org/rel/dpdk-16.11.9.tar.xz)
+- [Pktgen v3.1.1](https://git.dpdk.org/apps/pktgen-dpdk/snapshot/pktgen-3.1.1.tar.gz)
+
+A script is provided in `benchmarking_setup.sh` to help automate the
+installation of all requisites for benchmarking.
+
+After running the setup script, the Docker `cpsc-490-benchmark` image can be
+built (or simply pulled from Docker hub). To build it, use the `Dockerfile` in
+`docker/benchmark/`.
+
+Afterward, benchmarking can begin. The basic flow is that packets should move
+from a container running Pktgen to a container running a VNF service chain,
+routed over Open vSwitch.
+
+Thus, first start the containers:
+
+- For the VNF chain,
+
+  - Start the container with
+
+  ```shell
+  docker run -it --rm --privileged --network=host -w /opt/cpsc-490/NetBricks \
+      -v $(pwd):/opt/cpsc-490 \
+      -v /lib/modules:/lib/modules \
+      -v /usr/src:/usr/src \
+      -v /dev/hugepages:/dev/hugepages \
+      -v /usr/local/var/run/openvswitch:/var/run/openvswitch seankwalker/cpsc-490-dev /bin/bash
+  ```
+
+  export DPDK_PARAMS="-c 0x2 --master-lcore 1 -n 1 -m 512 --file-prefix testpmd --no-pci --vdev=virtio_user2,mac=00:00:00:00:00:02,path=/var/run/openvswitch/vhost-user2"
+
+  export TESTPMD_PARAMS="--burst=64 -i --disable-hw-vlan --txd=2048 --rxd=2048 --forward-mode=io --auto-start --coremask=0x2"
+
+  testpmd $DPDK_PARAMS -- $TESTPMD_PARAMS
+
+* For the Pktgen container:
+
+  - Start the container with
+
+  ```shell
+  docker run --network=host -tiv /mnt/huge:/mnt/huge \
+        -v /usr/local/var/run/openvswitch:/var/run/openvswitch \
+        --privileged seankwalker/cpsc-490-benchmark
+  ```
+
+  - Set the `DPDK_PARAMS` environment variable to the following:
+
+  ```shell
+  export DPDK_PARAMS="-c 0x1 --master-lcore 0 -n 1 -m 512 --file-prefix pktgen --no-pci --vdev=virtio_user1,mac=00:00:00:00:00:01,path=/var/run/openvswitch/vhost-user1"
+  ```
+
+  In words, this sets the container to use 4 containers (coremask of `0xf` ->
+  `0b1111` meaning cores 0, 1, 2, 3 are enabled), using core 3 as the master
+  core, with one memory channel, 512MB of memory, and tells pktgen to not bother
+  looking for physical devices on the bus to send packets over.
+
+  - Set the `PKTGEN_PARAMS` environment variable to the following:
+
+  ```shell
+  export PKTGEN_PARAMS="-T -P -m '0.0'"
+  ```
+
+  Where `-T` enables colored output, `-P` enables promiscuous mode on all ports,
+  and `-m` maps port 0 to core 0.
+
+  Finally, run
+
+  ```shell
+  $PKTGEN_DIR/app/app/$DPDK_BUILD/pktgen $DPDK_PARAMS -- $PKTGEN_PARAMS
+  ```
 
 ## Acknowledgements
 
