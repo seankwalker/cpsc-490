@@ -1,3 +1,10 @@
+/**
+ * boilerplate.js
+ * Sean Walker
+ * CPSC 490
+ * Boilerplate code used in all NF service chain Rust source files.
+ */
+
 // standard imports for all service chains
 const TOP_BOILERPLATE = `#![feature(box_syntax)]
 extern crate netbricks;
@@ -11,6 +18,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;`;
 
+// beginning of NF driver function
 const MAIN_START = `\nfn test<T, S>(ports: Vec<T>, sched: &mut S)
 where
     T: PacketRx + PacketTx + Display + Clone + 'static,
@@ -20,6 +28,7 @@ where
     let pipelines: Vec<_> = ports
         .iter()`;
 
+// end of NF driver function
 const MAIN_END = `
 .send(port.clone()))
 .collect();

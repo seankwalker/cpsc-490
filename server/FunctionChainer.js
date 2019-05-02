@@ -1,9 +1,20 @@
+/**
+ * FunctionChainer.js
+ * Sean Walker
+ * CPSC 490
+ * Implements a function to, given a list of virtual network functions (VNFs),
+ * create a NetBricks source file to run the specified functions in chain.
+ */
+
 import fs from "fs";
 import path from "path";
 import { TOP_BOILERPLATE, MAIN_START, MAIN_END } from "./boilerplate";
 
+// TODO: parse through NetBricks test/ directory and complete list of supported
+// VNFs
 const supportedNetworkFunctions = { mme: true, nat: true };
 
+// creates NF chain source file from `graph`
 const functionChainer = graph => {
     // check if an identical service chain has already been built
     const nfNames = [];

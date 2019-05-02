@@ -1,3 +1,13 @@
+/**
+ * server.js
+ * Sean Walker
+ * CPSC 490
+ * Implements a server to dynamically generate virtual network function (VNF)
+ * service chains based off of config files, run the service chains in
+ * containers, and pass back the MAC address of the container to the calling
+ * orchestrator for traffic routing.
+ */
+
 import dockerode from "dockerode";
 import express from "express";
 import fs from "fs";
