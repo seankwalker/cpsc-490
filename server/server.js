@@ -20,7 +20,7 @@ import functionChainer, { supportedNetworkFunctions } from "./FunctionChainer";
 // max number of clients per container
 const MAX_CLIENTS = 3;
 
-// id for NetBricks image
+// name for NetBricks image
 const NB_IMAGE = "seankwalker/cpsc-490-dev";
 
 // port to run server on

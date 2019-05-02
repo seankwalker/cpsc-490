@@ -324,8 +324,14 @@ changed in `server/server.js` if you wish.
 
 ### Server API
 
-The server dynamically spins up containers which run VNF service chains
-described by configuration files passed to its single API endpoint, `/start`.
+#### Endpoints
+
+| Method | Endpoint      | Parameters                         | Description                                                                                      |
+| ------ | ------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| POST   | /capacity     | `data`: `.json` configuration file | Lists remaining connection capacity for all containers currently running specified service chain |
+| GET    | /does-support | `nf`: network function name        | Tells whether the server supports specified network function                                     |
+| POST   | /start        | `data`: `.json` configuration file | Starts a slice running the specified service chain and responds with MAC address of the slice    |
+| GET    | /supported    | none                               | Lists all network functions supported by server                                                  |
 
 #### Configuration File Format
 
