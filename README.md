@@ -1,6 +1,9 @@
-# CPSC 490 (Project Title TBD)
+# A Web Server to Dynamically Generate Network Slices with User-Defined Virtual Network Function Service Chains
 
 This repository contains code relevant to my undergraduate thesis.
+
+If you are on Yale's network, you can access the project webpage
+[here](http://zoo.cs.yale.edu/classes/cs490/18-19b/walker.sean.skw34/).
 
 ## Front Matter
 
