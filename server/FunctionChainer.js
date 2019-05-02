@@ -191,3 +191,4 @@ authors = ["${authors}"]
 };
 
 export default functionChainer;
+export { supportedNetworkFunctions };

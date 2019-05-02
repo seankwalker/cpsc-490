@@ -15,7 +15,7 @@ import multer from "multer";
 import path from "path";
 
 import ContainerRegistry from "./ContainerRegistry";
-import functionChainer from "./FunctionChainer";
+import functionChainer, { supportedNetworkFunctions } from "./FunctionChainer";
 
 // max number of clients per container
 const MAX_CLIENTS = 3;
@@ -178,7 +178,7 @@ const app = express();
 const upload = multer({ fileFilter: jsonFileFilter, storage: storage });
 app.use(express.json());
 
-// define API endpoint
+// define API endpoints
 app.post("/start", upload.single("data"), async (req, res, next) => {
     if (!req.file) {
         res.sendStatus(400);
@@ -198,11 +198,22 @@ app.post("/start", upload.single("data"), async (req, res, next) => {
         // the orchestrator should use this mac address in packets it sends for
         // this UE, and the the kernel of the VM the server is running on will
         // route packets to the correct container
-        res.status(200);
-        res.send(`destination slice MAC address: ${parseResult}\n`);
+        res.status(200).send(`destination slice MAC address: ${parseResult}\n`);
     } else {
         res.sendStatus(500);
     }
+});
+
+// tells whether the server supports NF specified by query parameter `nf`
+app.get("/does-support", (req, res, next) => {
+    const queriedNF = req.query.nf;
+    const isSupported = supportedNetworkFunctions[queriedNF];
+    res.status(200).send(isSupported);
+});
+
+// lists all supported NFs
+app.get("/supported", (req, res, next) => {
+    res.status(200).send(Object.keys(supportedNetworkFunctions));
 });
 
 // listen for requests
