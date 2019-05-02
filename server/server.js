@@ -4,6 +4,7 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 
+import ContainerRegistry from "./ContainerRegistry";
 import functionChainer from "./FunctionChainer";
 
 // max number of clients per container
@@ -15,14 +16,8 @@ const NB_IMAGE = "seankwalker/cpsc-490-dev";
 // port to run server on
 const PORT = 3000;
 
-// port to spin up next Docker container on
-let nextContainerPort = 3001;
-
 // registry of Docker containers, service chains, remaining capacity
-let containers = new Map();
-
-// routing table
-let routing = new Map();
+let containers = new ContainerRegistry();
 
 /* FILE UPLOAD SETUP */
 
@@ -59,6 +54,16 @@ const storage = multer.diskStorage({
  *  ]
  */
 
+// Docker API
+const d = new dockerode();
+
+// get container's mac address
+const getMACAddress = async container => {
+    const containerData = await container.inspect();
+    const mac = containerData.NetworkSettings.MacAddress;
+    return mac;
+};
+
 // parse config file into JS object
 const parseConfigFile = async (clientIp, clientPort, contents) => {
     const parsed = JSON.parse(contents);
@@ -69,44 +74,41 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
 
     // check if there are any below-capacity containers which are running the
     // specified service chain
-    let d = new dockerode();
     let candidates = containers.has(parsed) ? containers.get(parsed) : [];
-    if (candidates.length > 0) {
-        console.log(
-            "found existing candidate containers! checking capacity..."
-        );
-    }
-
     for (let i = 0; i < candidates.length; i++) {
         let candidate = candidates[i];
-        if (candidate.remainingCapacity > 0) {
-            // route to this container
-            console.log(`candidate container ${candidate} has space!`);
-
-            // register this route in the routing table
-            let container = candidate.container;
-            routing.set({ clientIp, clientPort }, container);
-
-            // update `containers` list
-            candidates.slice(candidates.indexOf(candidate));
-            containers.set(parsed, [
-                ...candidates,
-                {
-                    ...candidate,
-                    remainingCapacity: candidate.remainingCapacity - 1
-                }
-            ]);
-            return true;
+        if (candidate.remainingCapacity <= 0) {
+            continue;
         }
+
+        // route to this container
+        console.log(
+            `found container ${candidate}, already running the specified`,
+            "service chain, with space for another connection"
+        );
+
+        // update container capacity
+        const container = candidate.container;
+        candidates.slice(candidates.indexOf(candidate));
+        containers.set(parsed, [
+            ...candidates,
+            {
+                ...candidate,
+                remainingCapacity: candidate.remainingCapacity - 1
+            }
+        ]);
+
+        // return container MAC address to server
+        return await getMACAddress(container);
     }
 
     // must spin up a new container
     console.log(
-        "no containers with remaining capacity found already running this service chain; spinning up new container!"
+        "no containers with remaining capacity found already running this",
+        "service chain; spinning up new container!"
     );
 
-    // create an executable to send into the container which runs the specified
-    // service chain
+    // create executable for specified service chain
     const serviceChain = functionChainer(parsed);
     if (!serviceChain) {
         // unsupported function was specified
@@ -114,7 +116,7 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
         return false;
     }
 
-    const hostPort = nextContainerPort.toString();
+    // create a container to host the service chain
     const container = await d.createContainer({
         Image: NB_IMAGE,
         Tty: true,
@@ -126,17 +128,8 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
                 "/lib/modules:/lib/modules",
                 "/usr/src:/usr/src"
             ],
-            NetworkMode: "host",
-            Privileged: true,
-            PortBindings: {
-                // container port 80 maps to host port `nextContainerPort`
-                "80/tcp": [
-                    {
-                        HostIp: "",
-                        HostPort: hostPort
-                    }
-                ]
-            }
+            NetworkMode: "bridge",
+            Privileged: true
         },
         WorkingDir: "/opt/cpsc-490/NetBricks",
         Cmd: ["cpsc-490/build.sh", serviceChain],
@@ -148,13 +141,13 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
         }
     });
 
+    // add new container to registry
     containers.set(parsed, [
         ...candidates,
         { container: container, remainingCapacity: MAX_CLIENTS - 1 }
     ]);
-    nextContainerPort++;
 
-    // run the container
+    // run the container with output piped to the server terminal
     const stream = await container.attach({
         stream: true,
         stderr: true,
@@ -164,7 +157,8 @@ const parseConfigFile = async (clientIp, clientPort, contents) => {
     stream.pipe(process.stdout);
     await container.start();
 
-    return true;
+    // get container MAC addres to send back to server
+    return await getMACAddress(container);
 };
 
 /* ROUTING SETUP */
@@ -180,18 +174,22 @@ app.post("/start", upload.single("data"), async (req, res, next) => {
         res.sendStatus(400);
         return;
     }
-
     console.log("config file saved as:", req.file.filename);
 
     const configFileContents = fs.readFileSync(req.file.path, "utf-8");
-    const success = await parseConfigFile(
+    const parseResult = await parseConfigFile(
         req.connection.remoteAddress,
         req.connection.remotePort,
         configFileContents
     );
 
-    if (success) {
-        res.sendStatus(200);
+    if (parseResult) {
+        // send MAC address back to orchestrator
+        // the orchestrator should use this mac address in packets it sends for
+        // this UE, and the the kernel of the VM the server is running on will
+        // route packets to the correct container
+        res.status(200);
+        res.send(`destination slice MAC address: ${parseResult}\n`);
     } else {
         res.sendStatus(500);
     }
